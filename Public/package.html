@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    idk5 + aaron collab
+    <div id="main"></div>
+<script>
+    
+function ParseLine(line) {
+    const match = line.match(/^\s*([A-Za-z_][\w-]*)\s*=\s*(.*)\s*$/);
+
+    if (!match) {
+        throw new Error(`Invalid line: ${line}`);
+    }
+
+    const k = match[1];
+    let v = match[2].trim();
+
+    // Quoted value
+    if (
+        (v.startsWith('"') && v.endsWith('"')) ||
+        (v.startsWith("'") && v.endsWith("'"))
+    ) {
+        v = v.slice(1, -1);
+    }
+
+    // Array
+    else if (v.startsWith("[") && v.endsWith("]")) {
+        const content = v.slice(1, -1).trim();
+
+        v = content
+            ? content
+                .split(",")
+                .map(x => x.trim())
+                .map(x => {
+                    if (
+                        (x.startsWith('"') && x.endsWith('"')) ||
+                        (x.startsWith("'") && x.endsWith("'"))
+                    ) {
+                        return x.slice(1, -1);
+                    }
+
+                    return x;
+                })
+            : [];
+    }
+
+    // Number
+    else if (v !== "" && !Number.isNaN(Number(v))) {
+        v = Number(v);
+    }
+
+    return { k, v };
+}
+
+function yaml(lines) {
+    const obj = {};
+
+    for (const line of lines) {
+        if (line.trim() === "") continue;
+
+        if (/^\s*[^=]+:/.test(line)) continue;
+
+        if (/^\s+/.test(line)) continue;
+
+
+        const { k, v } = ParseLine(line);
+        obj[k] = v;
+    }
+
+    return obj;
+}
+
+async function f() {
+    const url = new URL(location.href);
+    const identifier = url.pathname.split("/")[2];
+
+    const buildUrl = new URL("katzibuild", url+"/");
+
+    const response = await fetch(buildUrl);
+
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+
+    const content = await response.text();
+    const lines = content.split(/\r?\n/);
+    const json = yaml(lines);
+
+    const main = document.getElementById("main");
+
+    const heading = document.createElement("h1");
+    heading.textContent = `Package Details: ${identifier} ${json.version}`;
+
+    main.appendChild(heading);
+
+    let l;
+    [
+        {k:"Name",v: json.name},
+        {k:"Description",v: json.desciption},
+        {k:"Version",v: json.version},
+        {k:"Type",v: json.type},
+    ].forEach(e=>{
+        l = document.createElement("h3");
+        l.textContent = `${e.k}: ${e.v}`
+        main.appendChild(l);
+    })
+
+    const a = document.createElement("a");
+    a.href = `/package/${identifier}/KATZIBUILD`;
+    a.innerText="KATZIBUILD";
+    main.appendChild(a); 
+
+    main.innerHTML += "<br><br>";
+
+    const c = document.createElement("code");
+    c.innerText=`kpm i ${identifier}`;
+    main.appendChild(c);
+
+    console.log(json);
+}
+
+document.addEventListener("DOMContentLoaded", f);
+    </script>
+</body>
+</html>
+
+

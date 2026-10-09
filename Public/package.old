@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    idk4 + aaron collab
+    <div id="main"></div>
+<script>
+function yaml(lines){
+    const obj = {}
+    lines.forEach(e => {
+        if(e != "" && !e.startsWith(" ") && !(str.indexOf(':') !== -1 && str.indexOf(':') < str.indexOf('"'))) {
+            obj[ParseLine(e).k] = ParseLine().v;
+        }
+    });
+}
+
+function ParseLine(line) {
+    const match = line.match(/^\s*([A-Za-z_][\w-]*)\s*=\s*(.*)\s*$/);
+
+    if (!match) {
+        throw new Error(`Invalid line: ${line}`);
+    }
+
+    const k = match[1];
+    let v = match[2].trim();
+
+    // Quoted value
+    if (
+        (v.startsWith('"') && v.endsWith('"')) ||
+        (v.startsWith("'") && v.endsWith("'"))
+    ) {
+        v = v.slice(1, -1);
+    }
+    // Array
+    else if (v.startsWith("[") && v.endsWith("]")) {
+        const content = v.slice(1, -1).trim();
+
+        v = content
+            ? content
+                .split(",")
+                .map(x => x.trim())
+                .map(x => {
+                    if (
+                        (x.startsWith('"') && x.endsWith('"')) ||
+                        (x.startsWith("'") && x.endsWith("'"))
+                    ) {
+                        return x.slice(1, -1);
+                    }
+
+                    return x;
+                })
+            : [];
+    }
+    // Number
+    else if (!isNaN(v) && v !== "") {
+        v = Number(v);
+    }
+
+    return { k, v };
+}
+
+function yaml(lines) {
+    const obj = {};
+
+    lines.forEach(e => {
+        const { k, v } = ParseLine(e);
+        obj[k] = v;
+    });
+
+    return obj;
+}
+</script>
+
+    <script>
+         async function f() {
+             const identifier = location.href.split('/')[4];
+
+             const response = await fetch(location.href+'/katzibuild');
+
+             if (!response.ok) {
+               throw new Error(`HTTP ${response.status}`);
+             }
+
+             const content = await response.text();
+
+             const lines = content.split("\n");
+
+             const json = yaml(lines);
+
+             document.getElementById("main").innerHTML += `<h1>Package Details: ${identifier}</h1>`;
+         }
+
+         document.addEventListener("DOMContentLoaded", f);
+    </script>
+</body>
+</html>

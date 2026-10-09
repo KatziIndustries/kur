@@ -1,12 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 
-static string SHA256(string input)
-{
-    byte[] bytes = Encoding.UTF8.GetBytes(input);
-    return "";    
-}
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,8 +55,6 @@ app.MapPost("/api/packages/{identifier}/katzibuild", async (
     string identifier,
     IFormFile file) =>
 {
-    // Validate identifier
-    identifier = identifier.ToLower();
 
     if (!System.Text.RegularExpressions.Regex.IsMatch(
         identifier,
@@ -112,14 +104,15 @@ app.MapGet("/packages", async () =>
 
 app.MapGet("/package/{identifier}", async (string identifier) => 
 {
-    return Results.Text("idk","text/html");
+    return Results.Text(
+        File.ReadAllText("Public/package.html"),
+        "text/html"
+    );
 });
 
 // Katzibuild Files
 app.MapGet("/package/{identifier}/katzibuild", async (string identifier) =>
 {
-    identifier = identifier.ToLower();
-
     var katzibuild = await packageDatabase.GetKatzibuild(identifier);
 
     if (katzibuild == null)
