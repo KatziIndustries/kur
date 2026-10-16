@@ -58,7 +58,7 @@ app.MapPost("/api/packages/{identifier}/katzibuild", async (
 
     if (!System.Text.RegularExpressions.Regex.IsMatch(
         identifier,
-        @"^[a-z0-9-]+$"))
+        @"^[a-zA-Z0-9-]+$"))
     {
         return Results.BadRequest(new
         {
